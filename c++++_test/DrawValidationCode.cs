@@ -43,11 +43,6 @@ namespace c_____test
         public Int32 FontMaxSize = 20;
 
         /// <summary>
-        /// 验证码字体的颜色，默认为系统自动生成字体颜色
-        /// </summary>
-        public Color[] FontColor = { };
-
-        /// <summary>
         /// 验证码的背景色，默认为Color.FromArgb(243, 251, 254)
         /// </summary>
         public Color BackgroundColor = Color.FromArgb(243, 255, 255);
@@ -66,9 +61,9 @@ namespace c_____test
         /// 是否添加噪点，默认添加，噪点颜色为系统随机生成。
         /// </summary>
         public Boolean IsPixel = true;
-      
+
         /// <summary>
-        /// 是否添加随机噪点字符串，默认添加
+        /// 是否添加随机背景字符串，默认添加
         /// </summary>
         public Boolean IsRandString = true;
 
@@ -77,9 +72,8 @@ namespace c_____test
         /// </summary>
         public Int32 RandomStringCount;
 
-
         /// <summary>
-        /// 随机背景字符数量，默认9个
+        /// 随机背景字符串字数，默认9个
         /// </summary>
         public Int32 RandomStringFontSize = 9;
 
@@ -89,33 +83,9 @@ namespace c_____test
         public Boolean IsTwist;
 
         /// <summary>
-        /// 边框样式
-        /// </summary>
-        public enum BorderStyle
-        {
-            /// <summary>
-            /// 无边框
-            /// </summary>
-            None,
-            /// <summary>
-            /// 矩形边框
-            /// </summary>
-            Rectangle,
-            /// <summary>
-            /// 圆角边框
-            /// </summary>
-            RoundRectangle
-        }
-
-        /// <summary>
         /// 验证码字符串随机转动的角度的最大值
         /// </summary>
         public Int32 RotationAngle = 40;
-
-        /// <summary>
-        /// 设置或获取边框样式
-        /// </summary>
-        public BorderStyle Border;
 
         /// <summary>
         /// 字符串定位点
@@ -137,6 +107,30 @@ namespace c_____test
         /// </summary>
         public String[] FontFace = { "Verdana", "Microsoft Sans Serif", "Comic Sans MS", "Arial", "宋体" };
 
+        /// <summary>
+        /// 设置或获取边框样式
+        /// </summary>
+        public BorderStyle Border;
+
+        /// <summary>
+        /// 边框样式
+        /// </summary>
+        public enum BorderStyle
+        {
+            /// <summary>
+            /// 无边框
+            /// </summary>
+            None,
+            /// <summary>
+            /// 矩形边框
+            /// </summary>
+            Rectangle,
+            /// <summary>
+            /// 圆角边框
+            /// </summary>
+            RoundRectangle
+        }
+
         Graphics dc = null;
         Random random;
 
@@ -150,31 +144,39 @@ namespace c_____test
         ///<param name="CodeHeight">验证码画布的高度</param>
         ///<param name="CodeFontMinSize">验证码字体大小(最小)</param>
         ///<param name="CodeFontMaxSize">验证码字体大小(最大)</param>
-        ///<param name="CodeFontColor">验证码字体颜色</param>
         ///<param name="CodeBackgroundColor">验证码背景颜色</param>
         ///<param name="CodeBezierCount">贝塞尔曲线的数量</param>
         ///<param name="CodeLineCount">直线的数量</param>
         ///<param name="CodeIsPixel">是否生成噪点</param>
-        ///<param name=""></param>
-        ///<param name=""></param>
-        ///<param name=""></param>
-        ///<param name=""></param>
-        ///<param name=""></param>
-        ///<param name=""></param>
-        ///<param name=""></param>
-        ///<param name=""></param>
-        ///<param name=""></param>
-        public DrawValidationCode(
-            int CodeCount,
-            int CodeWidth,
-            int CodeHeight,
-            int CodeFontMinSize,
-            int CodeFontMaxSize,
-            Color[] CodeFontColor,
-            Color CodeBackgroundColor,
+        ///<param name="CodeIsRandString">是否生成随机背景字符串</param>
+        ///<param name="CodeRandomStringCount">生成随机背景字符串的个数</param>
+        ///<param name="CodeRandomStringFontSize">生成随机背景字符串字数<</param>
+        ///<param name="CodeIsTwist">是否对图片进行扭曲</param>
+        ///<param name="CodeRotationAngle">验证码字符串随机转动的角度的最大值</param>
+        ///<param name="CodeGaussianDeviation">对验证码图片进行高斯模糊的阀值，如果设置为0，则不对图片进行高斯模糊，该设置可能会对图片处理的性能有较大影响</param>
+        ///<param name="CodeBrightnessValue">对图片进行暗度和亮度的调整，如果该值为0，则不调整。该设置会对图片处理性能有较大影响</param>
+        ///<param name="CodeFontFace">验证码字体列表，默认为{ "Verdana", "Microsoft Sans Serif", "Comic Sans MS", "Arial", "宋体" }</param>
+        ///<param name="CodeBorder">设置边框样式</param>
+        public DrawValidationCode
+            (
+            int CodeCount = 6,
+            int CodeWidth = 240,
+            int CodeHeight = 80,
+            int CodeFontMinSize = 15,
+            int CodeFontMaxSize = 20,
+            Color CodeBackgroundColor = Color.FromArgb(,243, 255, 255),
             int CodeBezierCount,
             int CodeLineCount,
             Boolean CodeIsPixel,
+            Boolean CodeIsRandString,
+            int CodeRandomStringCount,
+            int CodeRandomStringFontSize,
+            Boolean CodeIsTwist,
+            int CodeRotationAngle,
+            Double CodeGaussianDeviation,
+            Int32 CodeBrightnessValue,
+            String[] CodeFontFace,
+            BorderStyle CodeBorder
             )
         {
             ValidationCodeCount = CodeCount;
@@ -187,15 +189,15 @@ namespace c_____test
             BezierCount = CodeBezierCount;
             LineCount = CodeLineCount;
             IsPixel = CodeIsPixel;
-            IsRandString =;
-            RandomStringCount =;
-            RandomStringFontSize =;
-            IsTwist =;
-            BorderStyle =;
-            GaussianDeviation =;
-            BrightnessValue =;
-            FontFace =;
-
+            IsRandString = CodeIsRandString;
+            RandomStringCount = CodeRandomStringCount;
+            RandomStringFontSize = CodeRandomStringFontSize;
+            IsTwist = CodeIsTwist;
+            RotationAngle = CodeRotationAngle;
+            GaussianDeviation = CodeGaussianDeviation;
+            BrightnessValue = CodeBrightnessValue;
+            FontFace = CodeFontFace;
+            Border = CodeBorder;
             random = new Random(Guid.NewGuid().GetHashCode());
             StrPoint = new Point[ValidationCodeCount + 1];
             if (GaussianDeviation < 0) GaussianDeviation = 0;
