@@ -7,6 +7,8 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Drawing.Imaging;
 
+
+
 namespace c_____test
 {
     #region 验证码生成类
@@ -18,9 +20,9 @@ namespace c_____test
         #region 定义和初始化配置字段
 
         /// <summary>
-        /// 获取和设置验证码字符串的长度，默认为6位
+        /// 验证码字符串长度，默认为空
         /// </summary>
-        public Int32 ValidationCodeCount = 6;
+        public Int32 ValidationCodeCount = 0;
 
         /// <summary>
         /// 验证码的宽度，默认为240
@@ -68,19 +70,19 @@ namespace c_____test
         public Boolean IsRandString = true;
 
         /// <summary>
-        /// 随机背景字符串的个数
+        /// 随机背景字符串的个数，默认4个
         /// </summary>
-        public Int32 RandomStringCount;
+        public Int32 RandomStringCount = 4;
 
         /// <summary>
-        /// 随机背景字符串字数，默认9个
+        /// 随机背景字符串字体大小，默认为16
         /// </summary>
-        public Int32 RandomStringFontSize = 9;
+        public Int32 RandomStringFontSize = 16;
 
         /// <summary>
         /// 是否对图片进行扭曲
         /// </summary>
-        public Boolean IsTwist;
+        public Boolean IsTwist = true;
 
         /// <summary>
         /// 验证码字符串随机转动的角度的最大值
@@ -110,7 +112,7 @@ namespace c_____test
         /// <summary>
         /// 设置或获取边框样式
         /// </summary>
-        public BorderStyle Border;
+        public BorderStyle Border = BorderStyle.None;
 
         /// <summary>
         /// 边框样式
@@ -132,14 +134,14 @@ namespace c_____test
         }
 
         Graphics dc = null;
+        Graphics ac = null;
         Random random;
 
         #endregion
 
         /// <summary>
-        /// 构造函数，用于初始化常用变量
+        /// 构造函数，用于初始化常用变量(使用自定义参数)
         /// </summary>
-        ///<param name="CodeCount">验证码的长度</param>
         ///<param name="CodeWidth">验证码画布的宽度</param>
         ///<param name="CodeHeight">验证码画布的高度</param>
         ///<param name="CodeFontMinSize">验证码字体大小(最小)</param>
@@ -150,42 +152,39 @@ namespace c_____test
         ///<param name="CodeIsPixel">是否生成噪点</param>
         ///<param name="CodeIsRandString">是否生成随机背景字符串</param>
         ///<param name="CodeRandomStringCount">生成随机背景字符串的个数</param>
-        ///<param name="CodeRandomStringFontSize">生成随机背景字符串字数<</param>
+        ///<param name="CodeRandomStringFontSize">生成随机背景字符串大小<</param>
         ///<param name="CodeIsTwist">是否对图片进行扭曲</param>
         ///<param name="CodeRotationAngle">验证码字符串随机转动的角度的最大值</param>
         ///<param name="CodeGaussianDeviation">对验证码图片进行高斯模糊的阀值，如果设置为0，则不对图片进行高斯模糊，该设置可能会对图片处理的性能有较大影响</param>
         ///<param name="CodeBrightnessValue">对图片进行暗度和亮度的调整，如果该值为0，则不调整。该设置会对图片处理性能有较大影响</param>
-        ///<param name="CodeFontFace">验证码字体列表，默认为{ "Verdana", "Microsoft Sans Serif", "Comic Sans MS", "Arial", "宋体" }</param>
         ///<param name="CodeBorder">设置边框样式</param>
         public DrawValidationCode
             (
-            int CodeCount = 6,
             int CodeWidth = 240,
-            int CodeHeight = 80,
+            int CodeHeight = 80 ,
             int CodeFontMinSize = 15,
             int CodeFontMaxSize = 20,
-            Color CodeBackgroundColor = Color.FromArgb(,243, 255, 255),
-            int CodeBezierCount,
-            int CodeLineCount,
-            Boolean CodeIsPixel,
-            Boolean CodeIsRandString,
-            int CodeRandomStringCount,
-            int CodeRandomStringFontSize,
-            Boolean CodeIsTwist,
-            int CodeRotationAngle,
-            Double CodeGaussianDeviation,
-            Int32 CodeBrightnessValue,
-            String[] CodeFontFace,
-            BorderStyle CodeBorder
+            string CodeBackgroundColor = null,
+            int CodeBezierCount = 2,
+            int CodeLineCount = 2,
+            Boolean CodeIsPixel = true,
+            Boolean CodeIsRandString = true,
+            int CodeRandomStringCount = 4,
+            int CodeRandomStringFontSize = 16,
+            Boolean CodeIsTwist = true,
+            int CodeRotationAngle = 40,
+            Double CodeGaussianDeviation = 0,
+            Int32 CodeBrightnessValue = 0,
+            BorderStyle CodeBorder = BorderStyle.None
             )
         {
-            ValidationCodeCount = CodeCount;
+
+            
             Width = CodeWidth;
             Height = CodeHeight;
             FontMinSize = CodeFontMinSize;
             FontMaxSize = CodeFontMaxSize;
-            FontColor = CodeFontColor;
-            BackgroundColor = CodeBackgroundColor;
+            
             BezierCount = CodeBezierCount;
             LineCount = CodeLineCount;
             IsPixel = CodeIsPixel;
@@ -196,49 +195,103 @@ namespace c_____test
             RotationAngle = CodeRotationAngle;
             GaussianDeviation = CodeGaussianDeviation;
             BrightnessValue = CodeBrightnessValue;
-            FontFace = CodeFontFace;
             Border = CodeBorder;
+            random = new Random(Guid.NewGuid().GetHashCode());
+            
+            if (GaussianDeviation < 0) GaussianDeviation = 0;
+
+            if (CodeBackgroundColor == null)
+            {
+                BackgroundColor = GetRandomLightColor();
+            }
+            else
+            {
+                BackgroundColor = ColorTranslator.FromHtml(CodeBackgroundColor);
+            }
+        }
+
+        /// <summary>
+        /// 构造函数，用于初始化常用变量(使用默认参数)
+        /// </summary>
+        public DrawValidationCode()
+            {
             random = new Random(Guid.NewGuid().GetHashCode());
             StrPoint = new Point[ValidationCodeCount + 1];
             if (GaussianDeviation < 0) GaussianDeviation = 0;
         }
+
 
         /// <summary>
         /// 生成验证码
         /// </summary>
         public byte[] CreateImage(String Code)
         {
+            //获取验证码长度
             ValidationCodeCount = Code.Length;
+
+            //设置验证码位置
+            StrPoint = new Point[ValidationCodeCount + 1];
+
+            //生成画板1
             Bitmap bit = new Bitmap(Width + 1, Height + 1);
-            //写字符串
+
+            //生成画板2
+            Bitmap codebit = new Bitmap(Width + 1, Height + 1);
+
+            //背景图层
             dc = Graphics.FromImage(bit);
             dc.SmoothingMode = SmoothingMode.HighQuality;
             dc.TextRenderingHint = TextRenderingHint.ClearTypeGridFit; ;
             dc.InterpolationMode = InterpolationMode.HighQualityBilinear;
             dc.CompositingQuality = CompositingQuality.HighQuality;
 
-            dc.Clear(Color.White);
+            //验证码图层
+            ac = Graphics.FromImage(codebit);
+            ac.SmoothingMode = SmoothingMode.HighQuality;
+            ac.TextRenderingHint = TextRenderingHint.ClearTypeGridFit; ;
+            ac.InterpolationMode = InterpolationMode.HighQualityBilinear;
+            ac.CompositingQuality = CompositingQuality.HighQuality;
+
+            //绘制填充背景色
+            dc.Clear(BackgroundColor);
+
+            //绘制验证码背景
             dc.DrawImageUnscaled(DrawBackground(), 0, 0);
-            dc.DrawImageUnscaled(DrawRandomString(Code), 0, 0);
+
+            //绘制验证码
+            ac.DrawImageUnscaled(DrawRandomString(Code), 0, 0);
+
             //对图片文字进行扭曲
-            bit = AdjustRippleEffect(bit, 5);
+            codebit = AdjustRippleEffect(codebit, 1);
+
+            //合并
+            bit=CombineBitmap(bit, codebit);
+
             //对图片进行高斯模糊
             if (GaussianDeviation > 0)
             {
                 Gaussian gau = new Gaussian();
                 bit = gau.FilterProcessImage(GaussianDeviation, bit);
             }
+
             //进行暗度和亮度处理
             if (BrightnessValue != 0)
             {
                 //对图片进行调暗处理
                 bit = AdjustBrightness(bit, BrightnessValue);
             }
+
             //bit.Save(target, ImageFormat.Jpeg);
+
+            //转化图像为字节数组
             Byte[] imgdata = BitmapToByte(bit);
-            //brush.Dispose();
+            //brush.Dispose();用途不明暂时保留
+
+            //关闭画板
             bit.Dispose();
             dc.Dispose();
+
+            //输出图像字节数组
             return imgdata;
         }
 
@@ -250,7 +303,7 @@ namespace c_____test
         {
             using (MemoryStream stream = new MemoryStream())
             {
-                bitmap.Save(stream, ImageFormat.Jpeg);
+                bitmap.Save(stream, ImageFormat.Png);
                 byte[] data = new byte[stream.Length];
                 stream.Seek(0, SeekOrigin.Begin);
                 stream.Read(data, 0, Convert.ToInt32(stream.Length));
@@ -267,20 +320,27 @@ namespace c_____test
         private Bitmap DrawBackground()
         {
             Bitmap bit = new Bitmap(Width + 1, Height + 1);
+            bit.MakeTransparent();
             Graphics g = Graphics.FromImage(bit);
+            g.Clear(Color.Transparent);
             g.SmoothingMode = SmoothingMode.HighQuality;
 
-            g.Clear(Color.White);
+            //g.Clear(Color.White);
             Rectangle rectangle = new Rectangle(0, 0, Width, Height);
-            Brush brush = new SolidBrush(BackgroundColor);
-            g.FillRectangle(brush, rectangle);
+            //Brush brush = new SolidBrush(BackgroundColor);
+            //g.FillRectangle(brush, rectangle);
 
             //画噪点
             if (IsPixel)
             {
                 g.DrawImageUnscaled(DrawRandomPixel(30), 0, 0);
             }
-            g.DrawImageUnscaled(DrawRandBgString(), 0, 0);
+
+            //画干扰字符
+            if (IsRandString)
+            {
+                g.DrawImageUnscaled(DrawRandBgString(), 0, 0);
+            }
 
 
             //画曲线
@@ -292,15 +352,43 @@ namespace c_____test
             if (Border == BorderStyle.Rectangle)
             {
                 //绘制边框
-                g.DrawRectangle(new Pen(Color.FromArgb(90, 87, 46)), 0, 0, Width, Height);
+                g.DrawRectangle(new Pen(GetRandomColor()), 0, 0, Width, Height);
             }
             else if (Border == BorderStyle.RoundRectangle)
             {
                 //画圆角
-                DrawRoundRectangle(g, rectangle, Color.FromArgb(90, 87, 46), 1, 3);
+                DrawRoundRectangle(g, rectangle, GetRandomColor(), 1, 3);
             }
 
             return bit;
+
+        }
+        #endregion
+
+        #region 合并位图
+        /**
+        * 合并两张bitmap为一张
+        * @param background
+        * @param foreground
+        * @return Bitmap
+        */
+        public static Bitmap CombineBitmap(Bitmap background, Bitmap foreground)
+        {
+            if (background == null)
+            {
+                return null;
+            }
+            int bgWidth = background.Width;
+            int bgHeight = background.Height;
+            Bitmap newmap = new Bitmap(bgWidth, bgHeight);
+            newmap.MakeTransparent();
+            Graphics canvas = Graphics.FromImage(newmap);
+            canvas.Clear(Color.Transparent);
+            canvas.DrawImageUnscaled(background, 0, 0);
+            canvas.DrawImageUnscaled(foreground, 0, 0);
+            canvas.Dispose();
+            //newmap.Dispose();
+            return newmap;
 
         }
         #endregion
@@ -590,8 +678,8 @@ namespace c_____test
             Bitmap b = new Bitmap(Width, Height);
             b.MakeTransparent();
             Graphics g = Graphics.FromImage(b);
-
             g.Clear(Color.Transparent);
+
             g.PixelOffsetMode = PixelOffsetMode.Half;
             g.SmoothingMode = SmoothingMode.HighQuality;
             g.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
@@ -838,13 +926,13 @@ namespace c_____test
         }
         #endregion
 
-        #region 合并图片
+        #region 合并图片(已弃用)
         /// <summary>       
         /// 合并图片        
         /// </summary>        
         /// <param name="maps"></param>        
         /// <returns></returns>        
-        private Bitmap MergerImg(params Bitmap[] maps)
+        /*private Bitmap MergerImg(params Bitmap[] maps)
         {
             int i = maps.Length;
             if (i == 0)
@@ -861,7 +949,7 @@ namespace c_____test
             }
             g.Dispose();
             return backgroudImg;
-        }
+        }*/
         #endregion
 
         #region 生成不重复的随机数种子
@@ -1422,12 +1510,14 @@ namespace c_____test
 
             //进行合成
             Bitmap bSrc = (Bitmap)src.Clone();
+            bSrc.MakeTransparent();
+
 
             // 依照 Format24bppRgb 每三个表示一 Pixel 0: 蓝 1: 绿 2: 红
-            BitmapData bitmapData = src.LockBits(new Rectangle(0, 0, src.Width, src.Height), ImageLockMode.ReadWrite,
-                                           PixelFormat.Format24bppRgb);
-            BitmapData bmSrc = bSrc.LockBits(new Rectangle(0, 0, bSrc.Width, bSrc.Height), ImageLockMode.ReadWrite,
-                                             PixelFormat.Format24bppRgb);
+            BitmapData bitmapData = src.LockBits(new Rectangle(0, 0, src.Width, src.Height), ImageLockMode.ReadWrite,PixelFormat.Format32bppArgb);
+            //PixelFormat.Format24bppRgb
+            BitmapData bmSrc = bSrc.LockBits(new Rectangle(0, 0, bSrc.Width, bSrc.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+            //PixelFormat.Format24bppRgb
 
             int scanline = bitmapData.Stride;
 

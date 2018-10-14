@@ -58,12 +58,12 @@ namespace c_____test
         ///</summary>
         ///<param name="length">目标字符串的长度</param>
         ///<param name="useNum">是否包含数字，true=包含，默认为包含</param>
-        ///<param name="useLow">是否包含小写字母，true=包含，默认为包含</param>
+        ///<param name="useLow">是否包含小写字母，true=包含，默认为不包含</param>
         ///<param name="useUpp">是否包含大写字母，true=包含，默认为包含</param>
         ///<param name="useSpe">是否包含特殊字符，true=包含，默认为不包含</param>
         ///<param name="custom">要包含的自定义字符，直接输入要包含的字符列表</param>
         ///<returns>指定长度的随机字符串</returns>
-        public static string GetRandomString(int length, bool useNum, bool useLow, bool useUpp, bool useSpe, string custom)
+        public static string GetRandomString(int length=6, bool useNum=true, bool useLow=false, bool useUpp=true, bool useSpe=false, string custom="")
         {
             byte[] b = new byte[4];
             Random r = new Random(GetRandomGuidHashCode());
@@ -72,6 +72,32 @@ namespace c_____test
             if (useLow == true) { str += "abcdefghijklmnopqrstuvwxyz"; }
             if (useUpp == true) { str += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; }
             if (useSpe == true) { str += "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"; }
+            for (int i = 0; i < length; i++)
+            {
+                s += str.Substring(r.Next(0, str.Length - 1), 1);
+            }
+            return s;
+        }
+
+
+
+        ///<summary>
+        ///生成随机字符串 (用于图片验证码)
+        ///</summary>
+        ///<param name="length">目标字符串的长度</param>
+        ///<param name="useNum">是否包含数字（排除0、1），true=包含，默认为包含</param>
+        ///<param name="useLow">是否包含小写字母（排除i、l、o），true=包含，默认为不包含</param>
+        ///<param name="useUpp">是否包含大写字母（排除I、L、O），true=包含，默认为包含</param>
+        ///<param name="custom">要包含的自定义字符，直接输入要包含的字符列表</param>
+        ///<returns>指定长度的随机字符串</returns>
+        public static string GetRandomString(int length = 6, bool useNum = true, bool useLow = false, bool useUpp = true, string custom = "")
+        {
+            byte[] b = new byte[4];
+            Random r = new Random(GetRandomGuidHashCode());
+            string s = null, str = custom;
+            if (useNum == true) { str += "0123456789"; }
+            if (useLow == true) { str += "abcdefghjkmnpqrstuvwxyz"; }
+            if (useUpp == true) { str += "ABCDEFGHJKMNPQRSTUVWXYZ"; }
             for (int i = 0; i < length; i++)
             {
                 s += str.Substring(r.Next(0, str.Length - 1), 1);
@@ -141,29 +167,8 @@ namespace c_____test
             }
         }
 
-        /// <summary>
-        /// 生成图片验证码
-        /// </summary>
-        public static byte[] GetImgVerificationCode()
-        {
-            Bitmap bmp = new Bitmap(80, 20);//新建一个图片对象
-            Graphics g = Graphics.FromImage(bmp);//利用该图片对象生成“画板”
-            string strCode = GetRandomString(6, true, true, true, false, "");
-            Font font = new Font("Arial", 12, FontStyle.Bold | FontStyle.Italic);//设置字体颜色
-            SolidBrush brush = new SolidBrush(Color.White);//新建一个画刷,到这里为止,我们已经准备好了画板、画刷、和数据
-            g.DrawString(strCode, font, brush, 0, 0);//关键的一步，进行绘制。
-            //bmp.Save(, ImageFormat.Jpeg);//保存为输出流，否则页面上显示不出来
-            Byte[] imgdata = BitmapToByte(bmp);
-            g.Dispose();//释放掉该资源
-            return imgdata;
-        }
 
-
-
-
-
-
-        /// <summary>
+        // <summary>
         /// 生成各种类型的验证码
         /// </summary>
         public static object GetVerificationCode(int a)
@@ -175,7 +180,7 @@ namespace c_____test
                     VerificationCode_out = GetRandomByGuid(0, 9) + GetRandomByGuid(0, 9) + GetRandomByGuid(0, 9) + GetRandomByGuid(0, 9) + GetRandomByGuid(0, 9) + GetRandomByGuid(0, 9);
                     break;
                 case 1:
-                    VerificationCode_out = GetImgVerificationCode();
+                    //VerificationCode_out = GetImgVerificationCode();
                     break;
                 default:
                     VerificationCode_out = "err";
@@ -192,9 +197,9 @@ namespace c_____test
 
         private void Button1_Click(object sender, EventArgs e)
         {
-            DrawValidationCode c = new DrawValidationCode();
-            FileStream t = new FileStream(@"C:\Users\lc990\Desktop\2.jpg", FileMode.Create);
-            byte[] b = c.CreateImage();
+            DrawValidationCode c = new DrawValidationCode(CodeHeight:60, CodeFontMinSize: 26, CodeFontMaxSize:26,CodeRandomStringCount:50);
+            FileStream t = new FileStream(@"C:\Users\lc990\Desktop\2.png", FileMode.Create);
+            byte[] b = c.CreateImage(GetRandomString(6,true,false,true,""));
             t.Write(b, 0, b.Length);
             t.Close();
 
